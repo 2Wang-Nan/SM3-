@@ -3,59 +3,59 @@
 #include <string.h>
 #include <stdint.h>
 
-// ³£Á¿¶¨Òå
+// å¸¸é‡å®šä¹‰
 #define SM3_BLOCK_SIZE 64
 #define SM3_DIGEST_SIZE 32
 
-// ³õÊ¼»¯ÏòÁ¿
+// åˆå§‹åŒ–å‘é‡
 static const uint32_t IV[8] = {
     0x7380166F, 0x4914B2B9, 0x172442D7, 0xDA8A0600,
     0xA96F30BC, 0x163138AA, 0xE38DEE4D, 0xB0FB0E4E
 };
 
-// Ñ­»·×óÒÆ
+// å¾ªç¯å·¦ç§»
 #define ROTL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
-// ²¼¶ûº¯Êı
+// å¸ƒå°”å‡½æ•°
 #define FF0(x, y, z) ((x) ^ (y) ^ (z))
 #define FF1(x, y, z) (((x) & (y)) | (x) & (z) | (y) & (z))
 #define GG0(x, y, z) ((x) ^ (y) ^ (z))
 #define GG1(x, y, z) (((x) & (y)) | (~(x) & (z)))
 
-// ÖÃ»»º¯Êı
+// ç½®æ¢å‡½æ•°
 #define P0(x) ((x) ^ ROTL(x, 9) ^ ROTL(x, 17))
 #define P1(x) ((x) ^ ROTL(x, 15) ^ ROTL(x, 23))
 
-// ³£Á¿Tj
+// å¸¸é‡Tj
 #define T(j) ((j) < 16 ? 0x79CC4519 : 0x7A879D8A)
 
-// ÏûÏ¢À©Õ¹
+// æ¶ˆæ¯æ‰©å±•
 static void message_extension(const uint32_t *B, uint32_t *W, uint32_t *W1) {
     int j;
-    // Éú³ÉW[0..67]
+    // ç”ŸæˆW[0..67]
     for (j = 0; j < 16; j++) {
         W[j] = B[j];
     }
     for (j = 16; j < 68; j++) {
         W[j] = P1(W[j-16] ^ W[j-9] ^ ROTL(W[j-3], 15)) ^ ROTL(W[j-13], 7) ^ W[j-6];
     }
-    // Éú³ÉW1[0..63]
+    // ç”ŸæˆW1[0..63]
     for (j = 0; j < 64; j++) {
         W1[j] = W[j] ^ W[j+4];
     }
 }
 
-// Ñ¹Ëõº¯Êı
+// å‹ç¼©å‡½æ•°
 static void cf(uint32_t *V, const uint32_t *B) {
     uint32_t W[68], W1[64];
     uint32_t A, B_reg, C, D, E, F, G, H;
     uint32_t SS1, SS2, TT1, TT2;
     int j;
 
-    // ÏûÏ¢À©Õ¹
+    // æ¶ˆæ¯æ‰©å±•
     message_extension(B, W, W1);
 
-    // ³õÊ¼»¯¹¤×÷±äÁ¿
+    // åˆå§‹åŒ–å·¥ä½œå˜é‡
     A = V[0];
     B_reg = V[1];
     C = V[2];
@@ -65,7 +65,7 @@ static void cf(uint32_t *V, const uint32_t *B) {
     G = V[6];
     H = V[7];
 
-    // 64ÂÖµü´ú
+    // 64è½®è¿­ä»£
     for (j = 0; j < 64; j++) {
         SS1 = ROTL((ROTL(A, 12) + E + ROTL(T(j), j)), 7);
         SS2 = SS1 ^ ROTL(A, 12);
@@ -88,7 +88,7 @@ static void cf(uint32_t *V, const uint32_t *B) {
         E = P0(TT2);
     }
 
-    // ¸üĞÂÁ´½Ó±äÁ¿
+    // æ›´æ–°é“¾æ¥å˜é‡
     V[0] ^= A;
     V[1] ^= B_reg;
     V[2] ^= C;
@@ -99,7 +99,7 @@ static void cf(uint32_t *V, const uint32_t *B) {
     V[7] ^= H;
 }
 
-// ½«×Ö½Ú×ª»»Îª´ó¶Ë×Ö
+// å°†å­—èŠ‚è½¬æ¢ä¸ºå¤§ç«¯å­—
 static void bytes_to_words(const uint8_t *bytes, uint32_t *words, int num_words) {
     int i;
     for (i = 0; i < num_words; i++) {
@@ -110,7 +110,7 @@ static void bytes_to_words(const uint8_t *bytes, uint32_t *words, int num_words)
     }
 }
 
-// ½«×Ö×ª»»Îª×Ö½Ú
+// å°†å­—è½¬æ¢ä¸ºå­—èŠ‚
 static void words_to_bytes(const uint32_t *words, uint8_t *bytes, int num_words) {
     int i;
     for (i = 0; i < num_words; i++) {
@@ -121,17 +121,17 @@ static void words_to_bytes(const uint32_t *words, uint8_t *bytes, int num_words)
     }
 }
 
-// SM3Ö÷º¯Êı
+// SM3ä¸»å‡½æ•°
 void sm3_hash(const uint8_t *msg, size_t msg_len, uint8_t *digest) {
     uint32_t V[8];
     uint8_t block[SM3_BLOCK_SIZE];
     size_t remaining = msg_len;
     size_t i;
 
-    // ³õÊ¼»¯ÏòÁ¿
+    // åˆå§‹åŒ–å‘é‡
     memcpy(V, IV, 8 * sizeof(uint32_t));
 
-    // ´¦ÀíÍêÕûµÄÏûÏ¢¿é
+    // å¤„ç†å®Œæ•´çš„æ¶ˆæ¯å—
     while (remaining >= SM3_BLOCK_SIZE) {
         uint32_t B[16];
         bytes_to_words(msg, B, 16);
@@ -140,11 +140,11 @@ void sm3_hash(const uint8_t *msg, size_t msg_len, uint8_t *digest) {
         remaining -= SM3_BLOCK_SIZE;
     }
 
-    // ´¦ÀíÊ£ÓàÊı¾İ²¢Ìî³ä
+    // å¤„ç†å‰©ä½™æ•°æ®å¹¶å¡«å……
     memcpy(block, msg, remaining);
-    block[remaining] = 0x80;  // Ìí¼Ó10000000
+    block[remaining] = 0x80;  // æ·»åŠ 10000000
 
-    // Èç¹ûÊ£Óà¿Õ¼ä²»×ãÒÔ´æ·Å³¤¶ÈĞÅÏ¢(8×Ö½Ú)£¬ÔòÏÈ´¦Àíµ±Ç°¿é
+    // å¦‚æœå‰©ä½™ç©ºé—´ä¸è¶³ä»¥å­˜æ”¾é•¿åº¦ä¿¡æ¯(8å­—èŠ‚)ï¼Œåˆ™å…ˆå¤„ç†å½“å‰å—
     if (remaining + 1 > SM3_BLOCK_SIZE - 8) {
         memset(block + remaining + 1, 0, SM3_BLOCK_SIZE - remaining - 1);
         uint32_t B[16];
@@ -155,22 +155,22 @@ void sm3_hash(const uint8_t *msg, size_t msg_len, uint8_t *digest) {
         memset(block + remaining + 1, 0, SM3_BLOCK_SIZE - remaining - 1 - 8);
     }
 
-    // Ìí¼Ó³¤¶ÈĞÅÏ¢(µ¥Î»£º±ÈÌØ)
+    // æ·»åŠ é•¿åº¦ä¿¡æ¯(å•ä½ï¼šæ¯”ç‰¹)
     uint64_t bit_len = (uint64_t)msg_len * 8;
     for (i = 0; i < 8; i++) {
         block[SM3_BLOCK_SIZE - 8 + i] = (uint8_t)(bit_len >> (8 * (7 - i)));
     }
 
-    // ´¦Àí×îºóÒ»¸ö¿é
+    // å¤„ç†æœ€åä¸€ä¸ªå—
     uint32_t B[16];
     bytes_to_words(block, B, 16);
     cf(V, B);
 
-    // Êä³ö½á¹û
+    // è¾“å‡ºç»“æœ
     words_to_bytes(V, digest, 8);
 }
 
-// ¸¨Öúº¯Êı£º½«¹şÏ£½á¹û×ª»»ÎªÊ®Áù½øÖÆ×Ö·û´®
+// è¾…åŠ©å‡½æ•°ï¼šå°†å“ˆå¸Œç»“æœè½¬æ¢ä¸ºåå…­è¿›åˆ¶å­—ç¬¦ä¸²
 void sm3_hex_digest(const uint8_t *digest, char *hex_str) {
     const char *hex_chars = "0123456789abcdef";
     for (int i = 0; i < SM3_DIGEST_SIZE; i++) {
@@ -180,23 +180,29 @@ void sm3_hex_digest(const uint8_t *digest, char *hex_str) {
     hex_str[2*SM3_DIGEST_SIZE] = '\0';
 }
 
-// Ê¾ÀıÓÃ·¨
+// ç¤ºä¾‹ç”¨æ³•
 int main() {
-    // ²âÊÔÏòÁ¿1£º¿ÕÏûÏ¢
+    // æµ‹è¯•å‘é‡1ï¼šç©ºæ¶ˆæ¯
     uint8_t digest1[SM3_DIGEST_SIZE];
     sm3_hash(NULL, 0, digest1);
     char hex1[2*SM3_DIGEST_SIZE + 1];
     sm3_hex_digest(digest1, hex1);
-    printf("¿ÕÏûÏ¢¹şÏ£: %s\n", hex1);
+    printf("ç©ºæ¶ˆæ¯å“ˆå¸Œ: %s\n", hex1);
 
-    // ²âÊÔÏòÁ¿2£º"abc"
+    // æµ‹è¯•å‘é‡2ï¼š"abc"
     const char *msg2 = "abc";
     uint8_t digest2[SM3_DIGEST_SIZE];
     sm3_hash((const uint8_t*)msg2, strlen(msg2), digest2);
     char hex2[2*SM3_DIGEST_SIZE + 1];
     sm3_hex_digest(digest2, hex2);
-    printf("\"abc\"¹şÏ£: %s\n", hex2);
+    printf("\"abc\"å“ˆå¸Œ: %s\n", hex2);
 
+// æµ‹è¯•å‘é‡3ï¼š"hello"
+    const char *msg3 = "hello";
+    uint8_t digest3[SM3_DIGEST_SIZE];
+    sm3_hash((const uint8_t*)msg3, strlen(msg3), digest3);
+    char hex3[2*SM3_DIGEST_SIZE + 1];
+    sm3_hex_digest(digest3, hex3);
+    printf("\"hello\"å“ˆå¸Œ: %s\n", hex3);
     return 0;
 }
-
